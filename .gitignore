@@ -33,3 +33,4 @@ Thumbs.db
 
 # DVC cache
 .dvc/cache/
+/models
