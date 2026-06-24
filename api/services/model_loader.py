@@ -1,16 +1,34 @@
-from pathlib import Path
-import joblib
+import mlflow
+import mlflow.pyfunc
+from mlflow.tracking import MlflowClient
 
-BASE_DIR = Path(__file__).resolve().parents[2]
-RISK_MODEL_PATH = BASE_DIR / "models" / "risk_model_complete_pipeline.joblib"
-CLAIM_MODEL_PATH = BASE_DIR / "models" / "claim_model_complete_pipeline.joblib"
+MLFLOW_TRACKING_URI = "http://127.0.0.1:5000"
+mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
+
+client = MlflowClient()
+
+def get_model_version(model_name: str, stage: str):
+    versions = client.get_latest_versions(name=model_name, stages=[stage])
+    if not versions:
+        raise ValueError(f"No versions found for model '{model_name}' in stage '{stage}'")
+    return versions[0].version
+
 
 def load_risk_model():
-    if not RISK_MODEL_PATH.exists():
-        raise FileNotFoundError(f"Risk model file not found at {RISK_MODEL_PATH}")
-    return joblib.load(RISK_MODEL_PATH)
+    model_name = "HealthcareRiskRFModel"
+    stage = "Production"
+    model_uri = f"models:/{model_name}/{stage}"
+    model = mlflow.pyfunc.load_model(model_uri)
+    version = get_model_version(model_name, stage)
+
+    return model, model_name, version
+
 
 def load_claim_model():
-    if not CLAIM_MODEL_PATH.exists():
-        raise FileNotFoundError(f"Claim model file not found at {CLAIM_MODEL_PATH}")
-    return joblib.load(CLAIM_MODEL_PATH)
+    model_name = "HealthcareClaimRFModel"
+    stage = "Staging"
+    model_uri = f"models:/{model_name}/{stage}"
+    model = mlflow.pyfunc.load_model(model_uri)
+    version = get_model_version(model_name, stage)
+
+    return model, model_name, version
