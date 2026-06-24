@@ -38,3 +38,7 @@ httpx
 
 # Utilities
 python-dotenv
+
+# UI
+gradio
+requests
